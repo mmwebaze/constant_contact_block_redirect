@@ -1,0 +1,8 @@
+name: Constant Contact Block Redirect
+type: module
+description: Redirects Constant Contact Block registrations.
+package: Constant Contact
+core: '8.x'
+project: 'constant_contact_block_redirect'
+dependencies:
+  - drupal:constant_contact_block

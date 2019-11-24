@@ -1,0 +1,97 @@
+<?php
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_help().
+ */
+function constant_contact_block_redirect_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case "help.page.constant_contact_block_redirect":
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Constant Contact Block Redirect module lets you specify 
+      the route or URI once a user has registered to a list.') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function constant_contact_block_redirect_theme($existing, $type, $theme, $path) {
+
+  return [
+    'constant_contact_block_redirect' => [
+      'variables' => ['variable' => NULL],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function constant_contact_block_redirect_form_alter(&$form, FormStateInterface $form_state, $form_id)
+{
+  if ($form_id === 'constant_contact_block_form_constantcontact'){
+    $form['#submit'][] = 'constant_contact_block_redirect_form_submit';
+  }
+  if ($form_id === 'constant_contact_block_config_form'){
+    global $base_root;
+
+    $config = \Drupal::config('constant_contact_block.constantcontantconfig');
+    $redirect = $config->get('redirect_ink');
+    $enable_redirect = $config->get('enable_redirect');
+    //print_r($enable_redirect);die;
+    $form['constant_contact_redirect'] = [
+      '#type' => 'details',
+      '#open' => FALSE,
+      '#title' => t('Redirect Settings'),
+      '#tree' => TRUE,
+    ];
+    $form['constant_contact_redirect']['enable_redirect']= [
+      '#type' => 'checkbox',
+      '#title' => t('Enable redirect on registration'),
+      '#default_value' => isset($enable_redirect) ? $enable_redirect : FALSE,
+   ];
+    $form['constant_contact_redirect']['redirect_ink'] = [
+      '#type' => 'url',
+      '#title' => t('Page user is redirected to after registration.'),
+      '#default_value' => isset($redirect) ? $redirect : $base_root.'/constant_contact/thankyou',
+    ];
+    $form['#submit'][] = 'constant_contact_block_redirect_config_form_submit';
+  }
+}
+
+/**
+ * The submit handler that saves Constant Contact Block Redirect settings.
+ *
+ * @param $form
+ * @param FormStateInterface $form_state
+ */
+function constant_contact_block_redirect_config_form_submit(&$form, FormStateInterface $form_state){
+  /** @var  Drupal\Core\Config\ConfigFactory $config */
+  $config = \Drupal::service('config.factory')->getEditable('constant_contact_block.constantcontantconfig');
+  $config->set('redirect_ink', $form_state->getValue('constant_contact_redirect')['redirect_ink']);
+  $config->set('enable_redirect', $form_state->getValue('constant_contact_redirect')['enable_redirect']);
+  $config->save();
+}
+
+/**
+ * The submit handler that redirects register users.
+ *
+ * @param $form
+ * @param FormStateInterface $form_state
+ */
+function constant_contact_block_redirect_form_submit(&$form, FormStateInterface $form_state){
+  $config = \Drupal::config('constant_contact_block.constantcontantconfig');
+  $enable_redirect = $config->get('enable_redirect');
+
+  if ($enable_redirect){
+    $redirect = $config->get('redirect_ink');
+    $url = Url::fromUri($redirect);
+    $form_state->setRedirectUrl($url);
+  }
+}

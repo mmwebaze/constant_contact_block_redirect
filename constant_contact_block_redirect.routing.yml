@@ -1,0 +1,7 @@
+constant_contact_block_redirect.default:
+  path: '/constant_contact/thankyou'
+  defaults:
+    _controller: '\Drupal\constant_contact_block_redirect\Controller\ConstantContactRedirectController::index'
+    _title: 'Thank you'
+  requirements:
+    _permission: 'access content'
